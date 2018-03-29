@@ -139,7 +139,7 @@ public class JSONParser {
           tx.overwintered = reader.nextBoolean();
           break;
         default:
-          Log.i("JSON", String.format("Unexpexted field: %s", name));
+          Log.i("JSON", String.format("Unexpected field: %s", name));
       }
     }
     /*
@@ -222,7 +222,7 @@ public class JSONParser {
                 output.type = reader.nextString();
                 break;
               default:
-                Log.i("JSON", String.format("Unexpexted field: %s", name));
+                Log.i("JSON", String.format("Unexpected field: %s", name));
             }
           }
           reader.endObject();
@@ -234,7 +234,7 @@ public class JSONParser {
           output.value = reader.nextLong();
           break;
         default:
-          Log.i("JSON", String.format("Unexpexted field: %s", name));
+          Log.i("JSON", String.format("Unexpected field: %s", name));
       }
     }
     /*
@@ -307,7 +307,7 @@ public class JSONParser {
           input.copyDataFrom(readTxSingleOutput(reader));
           break;
         default:
-          Log.i("JSON", String.format("Unexpexted field: %s", name));
+          Log.i("JSON", String.format("Unexpected field: %s", name));
       }
     }
     /*
