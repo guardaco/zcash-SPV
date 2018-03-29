@@ -25,6 +25,7 @@ public class ZCashTransactionDetails_taddr implements Comparable<ZCashTransactio
   Long value;
   Long shieldedValue;
   Long outputValue;
+  boolean overwintered;
 
   public static boolean prepareAfterParsing(Iterable<ZCashTransactionDetails_taddr> txdetails) {
     boolean initialized = true;

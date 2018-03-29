@@ -32,6 +32,7 @@ public class JSONParser {
   public static final String VALUE = "value";
   public static final String OUTPUTVALUE = "outputValue";
   public static final String SHIELDEDVALUE = "shieldedValue";
+  public static final String OVERWINTERED = "overwintered";
   public static final String RETRIEVEDVOUT = "retrievedVout";
   public static final String N = "n";
   public static final String SCRIPTPUBKEY = "scriptPubKey";
@@ -133,6 +134,9 @@ public class JSONParser {
           break;
         case SHIELDEDVALUE:
           tx.shieldedValue = Double.valueOf(reader.nextDouble() * 1e8).longValue();
+          break;
+        case OVERWINTERED:
+          tx.overwintered = reader.nextBoolean();
           break;
         default:
           Log.i("JSON", String.format("Unexpexted field: %s", name));
