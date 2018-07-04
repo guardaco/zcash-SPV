@@ -1,9 +1,9 @@
 package com.gravilink.zcash;
 
+import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
 import com.gravilink.zcash.crypto.Base58;
 import com.gravilink.zcash.crypto.ECKey;
-import com.gravilink.zcash.crypto.Sha256Hash;
 import com.gravilink.zcash.crypto.Utils;
 
 import org.spongycastle.asn1.ASN1Integer;
@@ -16,12 +16,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
+import ove.crypto.digest.Blake2b;
+
 public class ZCashTransaction_taddr {
 
-  int version = 1;
+  int version = 3;
   Vector<Tx_in> inputs = new Vector<>();
   Vector<Tx_out> outputs = new Vector<>();
+  Vector<JoinSplit> joinSplits = new Vector<>();
   int locktime = 0;
+  int expiryHeight = 499999999;
 
   ECKey privKey;
 
@@ -33,7 +37,7 @@ public class ZCashTransaction_taddr {
     long value_pool = 0;
 
     for (ZCashTransactionOutput out : outputs) {
-      inputs.add(new Tx_in(out, fromKeyHash));
+      inputs.add(new Tx_in(out, fromKeyHash, out.value));
       value_pool += out.value;
     }
 
@@ -46,7 +50,21 @@ public class ZCashTransaction_taddr {
   }
 
   public byte[] getBytes() throws ZCashException {
-    byte[] tx_bytes = Bytes.concat(Utils.int32BytesLE(version), Utils.compactSizeIntLE(inputs.size()));
+    // fOverwintered and nVersion
+    byte[] header = new byte[4];
+    header[0] = (byte) (0x03);
+    header[1] = (byte) (0x00);
+    header[2] = (byte) (0x00);
+    header[3] = (byte) (0x80);
+
+    // versionGroupId
+    byte[] versionGroupId = BaseEncoding.base16().decode("03C48270");
+    List<Byte> vgid = Bytes.asList(versionGroupId);
+    Collections.reverse(vgid);
+    versionGroupId = Bytes.toArray(vgid);
+    byte[] tx_bytes = Bytes.concat(header, versionGroupId);
+
+    tx_bytes = Bytes.concat(tx_bytes, Utils.compactSizeIntLE(inputs.size()));
     for (int i = 0; i < inputs.size(); i++) {
       tx_bytes = Bytes.concat(tx_bytes, inputs.get(i).getBytes(i));
     }
@@ -57,25 +75,67 @@ public class ZCashTransaction_taddr {
     }
 
     tx_bytes = Bytes.concat(tx_bytes, Utils.int32BytesLE(locktime));
+    tx_bytes = Bytes.concat(tx_bytes, Utils.int32BytesLE(expiryHeight));
+    //number JoinSplits
+    tx_bytes = Bytes.concat(tx_bytes, Utils.compactSizeIntLE(joinSplits.size()));
+
 
     return tx_bytes;
   }
 
   private byte[] getInputSignature(int index) throws ZCashException {
-    byte[] tx_bytes = Bytes.concat(Utils.int32BytesLE(version), Utils.compactSizeIntLE(inputs.size()));
-    for (int i = 0; i < inputs.size(); i++) {
-      tx_bytes = Bytes.concat(tx_bytes, inputs.get(i).getBytes(i != index));
-    }
+    //1. header
+    byte[] header = new byte[4];
+    header[0] = (byte) (0x03);
+    header[1] = (byte) (0x00);
+    header[2] = (byte) (0x00);
+    header[3] = (byte) (0x80);
 
-    tx_bytes = Bytes.concat(tx_bytes, Utils.compactSizeIntLE(outputs.size()));
-    for (int i = 0; i < outputs.size(); i++) {
-      tx_bytes = Bytes.concat(tx_bytes, outputs.get(i).getBytes());
-    }
+    //2. versionGroupId
+    byte[] versionGroupId = BaseEncoding.base16().decode("03C48270");
+    List<Byte> vgid = Bytes.asList(versionGroupId);
+    Collections.reverse(vgid);
+    versionGroupId = Bytes.toArray(vgid);
 
-    tx_bytes = Bytes.concat(tx_bytes, Utils.int32BytesLE(locktime), Utils.int32BytesLE(0x1));
+    byte[] hashPrevouts = new byte[32];
+    hashPrevouts = getPrevoutHash();
+    byte[] hashSequence = new byte[32];
+    hashSequence = getSequenceHash();
+    byte[] hashOutputs = new byte[32];
+    hashOutputs = getOutputsHash();
+    byte[] hashJoinSplits = new byte[32];
+    byte[] lt = Utils.int32BytesLE(locktime);
+    byte[] eh = Utils.int32BytesLE(expiryHeight);
+    byte[] sh = Utils.int32BytesLE(0x01);
 
-    Sha256Hash hash = Sha256Hash.wrap(Sha256Hash.hashTwice(tx_bytes));
-    ECKey.ECDSASignature sig = privKey.sign(hash);
+    // https://github.com/zcash/zips/blob/master/zip-0143.rst#specification
+    // p. 10 (a, b, c, d)
+    byte[] hash = inputs.get(index).txid;
+    byte[] in = Utils.int32BytesLE(inputs.get(index).index);
+    byte[] scr = inputs.get(index).script;
+    byte[] v = Utils.int64BytesLE(inputs.get(index).value);
+    byte[] sq = Utils.int32BytesLE(inputs.get(index).sequence);
+
+    //build tx
+    byte[] tx_bytes = Bytes.concat(header,
+            versionGroupId,
+            hashPrevouts,
+            hashSequence,
+            hashOutputs,
+            hashJoinSplits,
+            lt,
+            eh,
+            sh,
+            hash,
+            in,
+            scr,
+            v,
+            sq);
+
+    byte[] persn = Bytes.concat("ZcashSigHash".getBytes(), Utils.int32BytesLE(0x5ba81b19));
+    byte[] txBlakeHash = getBlake2bHash(tx_bytes, persn);
+
+    ECKey.ECDSASignature sig = privKey.signZcash(txBlakeHash);
     sig = sig.toCanonicalised();
     ByteArrayOutputStream bos = new ByteArrayOutputStream(72);
     try {
@@ -90,18 +150,53 @@ public class ZCashTransaction_taddr {
     return bos.toByteArray();
   }
 
+  private byte[] getPrevoutHash() {
+    byte[] prevouts = new byte[32];
+    for (int i = 0; i < inputs.size(); i++) {
+      prevouts = Bytes.concat(prevouts, inputs.get(i).txid, Utils.int32BytesLE(inputs.get(i).index));
+    }
+    return getBlake2bHash(prevouts, "ZcashPrevoutHash".getBytes());
+  }
+
+  private byte[] getSequenceHash() {
+    byte[] seq = new byte[32];
+    for (int i = 0; i < inputs.size(); i++) {
+      seq = Bytes.concat(seq, Utils.int32BytesLE(inputs.get(i).sequence));
+    }
+    return getBlake2bHash(seq, "ZcashSequencHash".getBytes());
+  }
+
+  private byte[] getOutputsHash() {
+    byte[] outs = new byte[32];
+    for (int i = 0; i < inputs.size(); i++) {
+      outs = Bytes.concat(outs, outputs.get(i).getBytes());
+    }
+    return getBlake2bHash(outs, "ZcashOutputsHash".getBytes());
+  }
+
+  private byte[] getBlake2bHash(byte[] bytes, byte[] persn) {
+    Blake2b.Param param = new Blake2b.Param().
+            setDigestLength(32).
+            setPersonal (persn);
+    final Blake2b blake2b = Blake2b.Digest.newInstance(param);
+    blake2b.update(bytes);
+    return blake2b.digest();
+  }
+
   private class Tx_in {
     byte[] txid;
     long index;
     byte[] script;
     int sequence = 0xffffffff;
+    Long value;
 
-    Tx_in(ZCashTransactionOutput base, byte[] pubKeyHash) {
+    Tx_in(ZCashTransactionOutput base, byte[] pubKeyHash, Long value) {
       List<Byte> txbytes = Bytes.asList(Utils.hexToBytes(base.txid));
       Collections.reverse(txbytes);
       txid = Bytes.toArray(txbytes);//May be incorrect
       index = base.n;
       script = Utils.hexToBytes(base.hex);
+      this.value = value;
     }
 
     byte[] getBytes(boolean isEmpty) {
@@ -143,6 +238,15 @@ public class ZCashTransaction_taddr {
 
     byte[] getBytes() {
       return Bytes.concat(Utils.int64BytesLE(value), Utils.compactSizeIntLE(script.length), script);
+    }
+  }
+
+  private class JoinSplit {
+    JoinSplit() {
+    }
+
+    byte[] getBytes() {
+      return new byte[0];
     }
   }
 
