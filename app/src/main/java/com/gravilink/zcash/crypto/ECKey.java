@@ -179,6 +179,14 @@ public class ECKey {
     return new ECDSASignature(components[0], components[1]).toCanonicalised();
   }
 
+  public ECDSASignature signZcash(byte[] input) {
+    ECDSASigner signer = new ECDSASigner();
+    ECPrivateKeyParameters privKey = new ECPrivateKeyParameters(priv, CURVE);
+    signer.init(true, privKey);
+    BigInteger[] components = signer.generateSignature(input);
+    return new ECDSASignature(components[0], components[1]).toCanonicalised();
+  }
+
   public static ECKey recoverFromSignature(int recId, ECDSASignature sig, Sha256Hash message, boolean compressed) {
     BigInteger n = CURVE.getN();  // Curve order.
     BigInteger i = BigInteger.valueOf((long) recId / 2);
