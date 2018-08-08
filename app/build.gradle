@@ -25,6 +25,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
 
-    compile 'com.madgag.spongycastle:core:1.52.0.0'
+    compile 'com.madgag.spongycastle:core:1.58.0.0'
     compile 'com.google.guava:guava:22.0-android'
 }

@@ -26,10 +26,10 @@ import java.util.Arrays;
  * the last byte is a discriminator value for the compressed pubkey.
  */
 public class DumpedPrivateKey {
-  public static final char[] ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray();
+  private static final char[] ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray();
   private static final int[] INDEXES = new int[128];
-  private static final byte DUMPED_PRIVATE_KEY_HEADER = (byte) 128;
-  byte[] bytes;
+  private static final byte DUMPED_PRIVATE_KEY_HEADER = (byte) 128; //mainnet
+  private byte[] bytes;
   static {
     Arrays.fill(INDEXES, -1);
     for (int i = 0; i < ALPHABET.length; i++) {
@@ -66,8 +66,7 @@ public class DumpedPrivateKey {
       throw new IllegalArgumentException("Invalid length of private key");
     }
 
-    final ECKey key = ECKey.fromPrivate(bytes, compressed);
-    return key;
+    return ECKey.fromPrivate(bytes, compressed);
   }
 
   public final String toBase58() {
