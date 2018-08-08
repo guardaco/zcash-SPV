@@ -39,7 +39,7 @@ public class PushTransaction_taddr extends AbstractZCashRequest implements Runna
 
     JSONObject response = queryNode(query);
     if (!response.isNull("error")) {
-      throw new ZCashException("Node returned an error to PushTransaction_taddr.pushTransaction");
+      throw new ZCashException("Node retured an error to PushTransaction_taddr.pushTransaction");
     }
 
   }

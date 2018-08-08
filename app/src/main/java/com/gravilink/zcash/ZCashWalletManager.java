@@ -1,11 +1,14 @@
 package com.gravilink.zcash;
 
+import android.util.Log;
+
 import com.google.common.primitives.Bytes;
 import com.gravilink.zcash.crypto.Base58;
 import com.gravilink.zcash.crypto.BrainKeyDict;
 import com.gravilink.zcash.crypto.DumpedPrivateKey;
 import com.gravilink.zcash.crypto.ECKey;
 import com.gravilink.zcash.crypto.Sha256Hash;
+import com.gravilink.zcash.crypto.Utils;
 import com.gravilink.zcash.request.AbstractZCashRequest;
 import com.gravilink.zcash.request.CreateTransaction_taddr;
 import com.gravilink.zcash.request.GetBalance_taddr;
@@ -28,6 +31,7 @@ import java.util.Vector;
 
 public class ZCashWalletManager {
   private static final String explorerAddress = "https://api.zcha.in/v2/mainnet/";
+  public static final int EXPIRY_HEIGHT_NO_LIMIT = 0;
   private Vector<ZCashTransactionDetails_taddr> cachedTansactionDetails_taddr;
 
   public ZCashWalletManager(String nodeAddress, String nodeUser, String nodePassword) throws ZCashException {
@@ -79,6 +83,7 @@ public class ZCashWalletManager {
     ripemd160Digest.doFinal(pubKeyHash, 0);
 
     pubKey = Bytes.concat(new byte[]{(byte) 0x1c, (byte) 0xb8}, pubKeyHash);
+    //                               ^~~~~~~~~~~~~~~~~~~~~~~~ mainnet prefix
 
     byte[] checksum = Sha256Hash.hashTwice(pubKey);
     byte[] summed = Bytes.concat(pubKey, new byte[]{checksum[0], checksum[1], checksum[2], checksum[3]});
@@ -105,6 +110,17 @@ public class ZCashWalletManager {
                                       final Long fee,
                                       final String privateKey,
                                       final long minconf,
+                                      final WalletCallback<String, ZCashTransaction_taddr> onComplete) throws ZCashException {
+    createTransaction_taddr(fromAddr, toAddr, amount, fee, privateKey, minconf, EXPIRY_HEIGHT_NO_LIMIT, onComplete);
+  }
+
+  public void createTransaction_taddr(final String fromAddr,
+                                      final String toAddr,
+                                      final Long amount,
+                                      final Long fee,
+                                      final String privateKey,
+                                      final long minconf,
+                                      final int expiryHeight,
                                       final WalletCallback<String, ZCashTransaction_taddr> onComplete) throws ZCashException {
     String methodName = "createTransaction_taddr";
     checkArgumentNonNull(fromAddr, "fromAddr", methodName);
@@ -147,12 +163,16 @@ public class ZCashWalletManager {
       throw new ZCashException("Transaction with amount + fee = 0 would not do anything.");
     }
 
+    if(expiryHeight < 0 || expiryHeight > 499999999) {
+      throw new ZCashException("Expiry height must be in [0, 499999999].");
+    }
+
     new Thread(new GetUTXOSRequest(fromAddr, minconf, new WalletCallback<String, List<ZCashTransactionOutput>>() {
 
       @Override
       public void onResponse(String r1, List<ZCashTransactionOutput> r2) {
         if (r1.equals("ok")) {
-          new CreateTransaction_taddr(fromAddr, toAddr, amount, fee, privateKey, onComplete, r2).run();
+          new CreateTransaction_taddr(fromAddr, toAddr, amount, fee, privateKey, expiryHeight, onComplete, r2).run();
         } else {
           onComplete.onResponse(r1, null);
         }

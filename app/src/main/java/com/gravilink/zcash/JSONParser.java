@@ -4,7 +4,6 @@ import android.util.JsonReader;
 import android.util.JsonToken;
 import android.util.Log;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -14,43 +13,39 @@ import java.util.Vector;
 
 public class JSONParser {
 
-  public static final String HASH = "hash";
-  public static final String MAINCHAIN = "mainChain";
-  public static final String FEE = "fee";
-  public static final String TYPE = "type";
-  public static final String SHIELDED = "shielded";
-  public static final String INDEX = "index";
-  public static final String BLOCKHASH = "blockHash";
-  public static final String BLOCKHEIGHT = "blockHeight";
-  public static final String VERSION = "version";
-  public static final String TIMESTAMP = "timestamp";
-  public static final String TIME = "time";
-  public static final String VIN = "vin";
-  public static final String VOUT = "vout";
-  public static final String VJOINSPLIT = "vjoinsplit";
-  public static final String LOCKTIME = "lockTime";
-  public static final String VALUE = "value";
-  public static final String OUTPUTVALUE = "outputValue";
-  public static final String SHIELDEDVALUE = "shieldedValue";
-  public static final String OVERWINTERED = "overwintered";
-  public static final String RETRIEVEDVOUT = "retrievedVout";
-  public static final String N = "n";
-  public static final String SCRIPTPUBKEY = "scriptPubKey";
-  public static final String ADDRESSES = "addresses";
-  public static final String ASM = "asm";
-  public static final String HEX = "hex";
-  public static final String REQSIGS = "reqSigs";
-  public static final String VALUEZAT = "valueZat";
-  public static final String SCRIPTSIG = "scriptSig";
-  public static final String TXID = "txid";
-  public static final String COINBASE = "coinbase";
-  public static final String SEQUENCE = "sequence";
+  private static final String HASH = "hash";
+  private static final String MAINCHAIN = "mainChain";
+  private static final String FEE = "fee";
+  private static final String TYPE = "type";
+  private static final String SHIELDED = "shielded";
+  private static final String INDEX = "index";
+  private static final String BLOCKHASH = "blockHash";
+  private static final String BLOCKHEIGHT = "blockHeight";
+  private static final String VERSION = "version";
+  private static final String TIMESTAMP = "timestamp";
+  private static final String TIME = "time";
+  private static final String VIN = "vin";
+  private static final String VOUT = "vout";
+  private static final String VJOINSPLIT = "vjoinsplit";
+  private static final String LOCKTIME = "lockTime";
+  private static final String VALUE = "value";
+  private static final String OUTPUTVALUE = "outputValue";
+  private static final String SHIELDEDVALUE = "shieldedValue";
+  private static final String RETRIEVEDVOUT = "retrievedVout";
+  private static final String N = "n";
+  private static final String SCRIPTPUBKEY = "scriptPubKey";
+  private static final String ADDRESSES = "addresses";
+  private static final String ASM = "asm";
+  private static final String HEX = "hex";
+  private static final String REQSIGS = "reqSigs";
+  private static final String VALUEZAT = "valueZat";
+  private static final String SCRIPTSIG = "scriptSig";
+  private static final String TXID = "txid";
+  private static final String COINBASE = "coinbase";
+  private static final String SEQUENCE = "sequence";
 
 
   public static List<ZCashTransactionDetails_taddr> parseTxArray(InputStream is) throws IOException {
-    //java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
-    //String res = s.hasNext() ? s.next() : "";
-    //InputStream stream = new ByteArrayInputStream(res.getBytes("UTF-8"));
     JsonReader reader = new JsonReader(new InputStreamReader(is, "UTF-8"));
     List<ZCashTransactionDetails_taddr> txs = null;
     try {
@@ -77,6 +72,10 @@ public class JSONParser {
 
   private static ZCashTransactionDetails_taddr readTx(JsonReader reader) throws IOException, IllegalStateException {
     ZCashTransactionDetails_taddr tx = new ZCashTransactionDetails_taddr();
+    if(reader.peek() != JsonToken.BEGIN_OBJECT) {
+      throw new IOException("Cannot parse JSON");
+    }
+
     reader.beginObject();
     while (reader.peek() != JsonToken.END_OBJECT) {
       String name = reader.nextName();
@@ -135,37 +134,11 @@ public class JSONParser {
         case SHIELDEDVALUE:
           tx.shieldedValue = Double.valueOf(reader.nextDouble() * 1e8).longValue();
           break;
-        case OVERWINTERED:
-          tx.overwintered = reader.nextBoolean();
-          break;
         default:
-          Log.i("JSON", String.format("Unexpected field: %s", name));
+          reader.skipValue();
       }
     }
-    /*
-    tx.hash        = readFieldString(reader);
-    tx.mainChain   = readFieldBoolean(reader);
-    tx.fee         = readFieldLong(reader, true);
-    tx.type        = readFieldString(reader);
-    tx.shielded    = readFieldBoolean(reader);
-    tx.index       = readFieldLong(reader, false);
-    tx.blockHash   = readFieldString(reader);
-    tx.blockHeight = readFieldLong(reader, false);
-    tx.version     = readFieldLong(reader, false);
-    tx.locktime    = readFieldLong(reader, false);
-    tx.timestamp   = readFieldLong(reader, false);
-    tx.time        = readFieldLong(reader, false);
-    tx.vin         = readTxInputs(reader);
-    tx.vout        = readTxOutputs(reader, tx.hash);
 
-    //vjoinsplit
-    reader.nextName();
-    reader.skipValue();
-
-    tx.value         = readFieldLong(reader, true);
-    tx.outputValue   = readFieldLong(reader, true);
-    tx.shieldedValue = readFieldLong(reader, true);
-    */
     reader.endObject();
     return tx;
   }
@@ -222,7 +195,7 @@ public class JSONParser {
                 output.type = reader.nextString();
                 break;
               default:
-                Log.i("JSON", String.format("Unexpected field: %s", name));
+                reader.skipValue();
             }
           }
           reader.endObject();
@@ -234,45 +207,16 @@ public class JSONParser {
           output.value = reader.nextLong();
           break;
         default:
-          Log.i("JSON", String.format("Unexpected field: %s", name));
+          reader.skipValue();
       }
     }
-    /*
-    output.n = readFieldLong(reader, false);
 
-    reader.nextName();
-    reader.beginObject(); //scriptpubkey
-
-    reader.nextName();
-    reader.beginArray(); //addresses
-
-    output.address = reader.nextString();
-    while(reader.hasNext()) {
-      reader.skipValue();
-    }
-
-    reader.endArray(); //addresses end
-
-    output.asm     = readFieldString(reader);
-    output.hex     = readFieldString(reader);
-    output.regSigs = readFieldLong(reader, false);
-    output.type    = readFieldString(reader);
-
-    reader.endObject(); //scriptpubkey end
-
-    //Double value, skipped because next field has type Long and same meaning
-    reader.nextName();
-    reader.skipValue();
-
-    output.value = readFieldLong(reader, false);
-*/
     reader.endObject(); //output end
     return output;
   }
 
   private static Vector<ZCashTransactionOutput> readTxInputs(JsonReader reader) throws IOException {
     Vector<ZCashTransactionOutput> vin = new Vector<>();
-    //reader.nextName();
     reader.beginArray();
     while (reader.hasNext()) {
       vin.add(readTxSingleInput(reader));
@@ -307,29 +251,10 @@ public class JSONParser {
           input.copyDataFrom(readTxSingleOutput(reader));
           break;
         default:
-          Log.i("JSON", String.format("Unexpected field: %s", name));
+          reader.skipValue();
       }
     }
-    /*
-    if(name.equals("coinbase")) {
-      input.coinbase = reader.nextString();
-      input.sequence = readFieldLong(reader, false);
-    } else {
-      //retrievedVout
-      input.copyDataFrom(readTxSingleOutput(reader));
 
-      //signatures
-      reader.nextName();
-      reader.skipValue();
-
-      input.sequence = readFieldLong(reader, false);
-      input.txid = readFieldString(reader);
-
-      //vout - already read in subobject retrievedVout
-      reader.nextName();
-      reader.skipValue();
-    }
-    */
     reader.endObject();
     return input;
   }

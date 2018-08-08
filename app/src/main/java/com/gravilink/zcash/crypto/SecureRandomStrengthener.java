@@ -14,7 +14,7 @@ public class SecureRandomStrengthener {
   private static final EntropySource mTimeEntropySource = new EntropySource() {
 
     final ByteBuffer timeBuffer = ByteBuffer.allocate(Long.SIZE / Byte.SIZE
-      * 2);
+            * 2);
 
     @Override
     public ByteBuffer provideEntropy() {
@@ -33,7 +33,7 @@ public class SecureRandomStrengthener {
 
   public static SecureRandomStrengthener getInstance() {
     return new SecureRandomStrengthener(
-      DEFAULT_PSEUDO_RANDOM_NUMBER_GENERATOR);
+            DEFAULT_PSEUDO_RANDOM_NUMBER_GENERATOR);
   }
 
   public static SecureRandomStrengthener getInstance(final String algorithm) {
@@ -43,7 +43,7 @@ public class SecureRandomStrengthener {
   private SecureRandomStrengthener(final String algorithm) {
     if (algorithm == null || algorithm.length() == 0) {
       throw new IllegalArgumentException(
-        "Please provide a PRNG algorithm string such as SHA1PRNG");
+              "Please provide a PRNG algorithm string such as SHA1PRNG");
     }
 
     this.algorithm = algorithm;
@@ -51,7 +51,7 @@ public class SecureRandomStrengthener {
       this.digest = MessageDigest.getInstance("SHA1");
     } catch (final NoSuchAlgorithmException e) {
       throw new IllegalStateException(
-        "MessageDigest to create seed not available", e);
+              "MessageDigest to create seed not available", e);
     }
     this.seedBuffer = ByteBuffer.allocate(this.digest.getDigestLength());
   }
@@ -59,7 +59,7 @@ public class SecureRandomStrengthener {
   public void addEntropySource(final EntropySource source) {
     if (source == null) {
       throw new IllegalArgumentException(
-        "EntropySource should not be null");
+              "EntropySource should not be null");
     }
     this.entropySources.add(source);
   }
@@ -100,10 +100,10 @@ public class SecureRandomStrengthener {
 
     try {
       this.digest.digest(this.seedBuffer.array(), 0,
-        this.seedBuffer.capacity());
+              this.seedBuffer.capacity());
     } catch (final DigestException e) {
       throw new IllegalStateException(
-        "DigestException should not be thrown", e);
+              "DigestException should not be thrown", e);
     }
     secureRandom.setSeed(this.seedBuffer.array());
 

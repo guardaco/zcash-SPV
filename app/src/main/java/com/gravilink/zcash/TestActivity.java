@@ -50,7 +50,7 @@ public class TestActivity extends AppCompatActivity {
     }
     privateKey = "KwxzbSmXp1mDHW2aBrXaYMbPWveKT8XWNjWdnVgPXjh4eP4WP9Xk";
     try {
-      publicKey = ZCashWalletManager.publicKeyFromPrivateKey_taddr(privateKey);//"t1V4EGWyNiQBX4k9jtzBvFUzmDArCnGa8eH";
+      publicKey = ZCashWalletManager.publicKeyFromPrivateKey_taddr(privateKey);//"t1QErGyQD4EQmPoYfNcF1i7VcTpZdDc2Vt4";
     } catch (ZCashException e) {
       Log.e("ONCREATE", "CANNOT CREATE PUBLIC KEY");
     }
@@ -159,6 +159,7 @@ public class TestActivity extends AppCompatActivity {
         } catch (ZCashException e) {
           e.printStackTrace();
         }
+
       }
     });
 

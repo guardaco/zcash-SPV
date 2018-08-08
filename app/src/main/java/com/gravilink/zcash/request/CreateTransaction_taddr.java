@@ -17,12 +17,14 @@ public class CreateTransaction_taddr extends AbstractZCashRequest implements Run
   private long fee;
   private long value;
   private List<ZCashTransactionOutput> utxos;
+  private int expiryHeight;
 
   public CreateTransaction_taddr(String fromAddr,
                                  String toAddr,
                                  long value,
                                  long fee,
                                  String privatekey,
+                                 int expiryHeight,
                                  WalletCallback<String, ZCashTransaction_taddr> callback,
                                  List<ZCashTransactionOutput> utxos) {
     this.fromAddr = fromAddr;
@@ -32,6 +34,7 @@ public class CreateTransaction_taddr extends AbstractZCashRequest implements Run
     this.privateKey = privatekey;
     this.callback = callback;
     this.utxos = utxos;
+    this.expiryHeight = expiryHeight;
   }
 
   @Override
@@ -52,7 +55,7 @@ public class CreateTransaction_taddr extends AbstractZCashRequest implements Run
     }
 
     return new ZCashTransaction_taddr(DumpedPrivateKey.fromBase58(privateKey), fromAddr, toAddr,
-            value, fee, outputs);
+            value, fee, expiryHeight, outputs);
   }
 
 
