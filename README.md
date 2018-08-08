@@ -27,6 +27,12 @@ zcash-SPV/blob/master/app/src/main/java/com/gravilink/zcash/TestActivity.java
 
 Before using ```generateNewPrivateKey_taddr``` ```BrainKeyDict``` must be initialized with ```BrainKeyDict.init()```.
 
+## Overwinter
+Method ```createTransaction_taddr()``` has a field ```expiryHeight```. From 0 to 499999999 (inclusive).
+By default is 0 (no limit). Or use constant ```EXPIRY_HEIGHT_NO_LIMIT```.
+
+Now the library supports only v3 transactions (https://github.com/zcash/zips/blob/master/zip-0202.rst#transaction-format-version-3)
+
 ## License
 
 Library are licensed under the [MIT](/LICENSE.md) License.
