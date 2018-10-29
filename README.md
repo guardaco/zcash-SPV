@@ -31,6 +31,9 @@ Before using ```generateNewPrivateKey_taddr``` ```BrainKeyDict``` must be initia
 Method ```createTransaction_taddr()``` has a field ```expiryHeight```. From 0 to 499999999 (inclusive).
 By default is 0 (no limit). Or use constant ```EXPIRY_HEIGHT_NO_LIMIT```.
 
+## Sapling
+New v4 transparent transactions are supported.
+
 Now the library supports only v3 transactions (https://github.com/zcash/zips/blob/master/zip-0202.rst#transaction-format-version-3)
 
 ## License
