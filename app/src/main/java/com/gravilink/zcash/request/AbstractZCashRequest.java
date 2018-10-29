@@ -25,7 +25,9 @@ public abstract class AbstractZCashRequest {
   protected static String nodeAddress;
   protected static String auth;
   protected static String explorerAddress;
-  protected final static String BLOCKEXPLORER_API_ADDR = "https://zcash.blockexplorer.com/api/";
+//  protected final static String BLOCKEXPLORER_API_ADDR = "https://zcash.blockexplorer.com/api/";
+  protected final static String BLOCKEXPLORER_API_ADDR = "https://zcashnetwork.info/api/";
+//  protected final static String TESTNET_BLOCKEXPLORER_API_ADDR = "https://explorer.testnet.z.cash/api/";  //TESTNET
   private static long lastExplorerQuery;
   private static final Object lastExplorerQueryMutex = new Object();
   private static final long explorerTimeout = 100;

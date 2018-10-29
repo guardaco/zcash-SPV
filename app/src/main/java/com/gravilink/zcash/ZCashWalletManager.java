@@ -84,6 +84,8 @@ public class ZCashWalletManager {
 
     pubKey = Bytes.concat(new byte[]{(byte) 0x1c, (byte) 0xb8}, pubKeyHash);
     //                               ^~~~~~~~~~~~~~~~~~~~~~~~ mainnet prefix
+//    pubKey = Bytes.concat(new byte[]{(byte) 0x1d, (byte) 0x25};, pubKeyHash);
+    //                               ^~~~~~~~~~~~~~~~~~~~~~~~ testnet prefix
 
     byte[] checksum = Sha256Hash.hashTwice(pubKey);
     byte[] summed = Bytes.concat(pubKey, new byte[]{checksum[0], checksum[1], checksum[2], checksum[3]});
