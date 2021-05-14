@@ -1,3 +1,10 @@
+
+# DEPRECATED
+
+Please note that these applications are deprecated. Support has been suspended. Issues and pull-requests are no longer reviewed by our team.
+Commercial proposals for the development of such applications can be sent to partners@guarda.com
+
+
 # Zcash SPV library by [Guarda](https://guarda.co)
 
 ## About
