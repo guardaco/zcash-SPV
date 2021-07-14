@@ -25,7 +25,7 @@ public class ZCashTransaction_taddr {
   private static final int VERSION_BRANCH_ID_OVERWINTER = 0x03C48270;
   private static final int VERSION_BRANCH_ID_SAPLING = 0x892F2085;
   private static final int CONSENSUS_BRANCH_ID_OVERWINTER = 0x5ba81b19;
-  private static final int CONSENSUS_BRANCH_ID_SAPLING = 0x76b809bb;
+  private static final int CONSENSUS_BRANCH_ID_SAPLING = 0xf5b9230b;//See https://z.cash/upgrade/heartwood/ for details.
   //  private static final int header = 0x80000003; //version=3, fooverwintered=1
   private static final int header = 0x80000004; //version=4, fooverwintered=1
   private static final int versionGroupId = VERSION_BRANCH_ID_SAPLING;
